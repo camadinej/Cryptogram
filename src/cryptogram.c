@@ -17,14 +17,22 @@ struct quote {
 struct quote *head = NULL;
 struct  quote *tail = NULL;
 
-const char *puzzle;
 const char *flag = "quit";
+char *puzzle;
 char *encryptedString;
 char encryptionKey[26]; //array positions map A-Z to 0-25
 char playerKey[26];
 char userInput[5];
 
 int listSize = 0;
+
+/**
+ * Flush stdin when there is input left over.
+ */
+void flushBuffer(){
+    if(strlen(userInput) == 4 && userInput[3] != '\n')
+        while(getchar() != '\n');
+}
 
 /**
  * Swaps two characters at the specified position in the
@@ -41,11 +49,14 @@ void swapChars(char *array, int first, int second) {
 }
 
 /**
- * Flush stdin when there is input left over.
+ * Implements the Fisher-Yates Shuffle on a character string.
+ *
+ * @param orderedString - the string to shuffle
  */
-void flushBuffer(){
-    if(strlen(userInput) == 4 && userInput[3] != '\n')
-        while(getchar() != '\n');
+void shuffle(char *orderedString) {
+    for(int i = (int)(strlen(orderedString)-1); i > 0; i--) {
+        swapChars(orderedString, rand() % i, i);
+    }
 }
 
 /**
@@ -91,10 +102,16 @@ struct quote *get(int n) {
     return current;
 }
 
+/**
+ * Builds the body string of a quote.
+ *
+ * @param current - the current quote being built by loadQuotes
+ * @param buffer - the buffer for the text file
+ */
 void buildBody(struct quote *current, char *buffer) {
-    size_t lineLength = 0; //length of the current line in the file
-    size_t currentBodyLength = 0; //the length of the partially stored quote
-    char *tempString; //a place to build the quote
+    size_t lineLength = 0;
+    size_t currentBodyLength = 0;
+    char *tempString;
 
     if(current->body == NULL) {
         current->body = malloc((lineLength = strlen(buffer)) * sizeof(char) + 1);
@@ -104,19 +121,20 @@ void buildBody(struct quote *current, char *buffer) {
         currentBodyLength = strlen(current->body);
         lineLength = strlen(buffer);
         tempString = malloc((sizeof(char) * (lineLength + currentBodyLength)) + 1);
-        strncpy(tempString, current->body, currentBodyLength + 1); //copies in the nul byte
-        strncat(tempString, buffer, lineLength); //starting at the nul byte(overwrites it) up to the second to last char
+        strncpy(tempString, current->body, currentBodyLength + 1);
+        strncat(tempString, buffer, lineLength);
         free(current->body);
         current->body = tempString;
     }
-
 }
 
-//loadQuotes
+/**
+ * Builds a linked list of quotes from a text file.
+ */
 void loadQuotes() {
     FILE *quotes;
-    size_t lineLength = 0; //length of the current line in the file
-    struct quote *current = quoteAlloc(); //the current quote
+    size_t lineLength = 0;
+    struct quote *current = quoteAlloc();
     char buffer[93];
 
     quotes = fopen("quotes.txt", "r");
@@ -131,7 +149,7 @@ void loadQuotes() {
         }
         else if(buffer[0] == '-' && buffer[1] == '-') {
             current->author = malloc((lineLength = strlen(buffer)) * sizeof(char) + 1);
-            strncpy(current->author, buffer, lineLength + 1); //test this for '\0'
+            strncpy(current->author, buffer, lineLength + 1);
         }
         else {
             buildBody(current, buffer);
@@ -186,17 +204,6 @@ char *getPuzzle() {
 }
 
 /**
- * Implements the Fisher-Yates Shuffle on a character string.
- *
- * @param orderedString - the string to shuffle
- */
-void shuffle(char *orderedString) {
-    for(int i = (int)(strlen(orderedString)-1); i > 0; i--) {
-        swapChars(orderedString, rand() % i, i);
-    }
-}
-
-/**
  * Initializes the necessary variables before the game loop begins.
  */
 void initialization() {
@@ -210,36 +217,6 @@ void initialization() {
     }
     encryptedString = (char *) malloc(sizeof(char) * strlen(puzzle) + 1);
     encryptPuzzle();
-}
-
-/**
- * Prints the game world to the screen.
- */
-bool displayWorld() {
-    bool decryptionStatus = true;
-    printf("Encrypted: %s\n", encryptedString);
-    printf("Decrypted: ");
-    for(int i = 0; i < strlen(encryptedString); i++) {
-        if(isalpha(encryptedString[i])) {
-            if(playerKey[toupper(encryptedString[i])-65] == '\0') {
-                decryptionStatus = false;
-                printf("_");
-            }
-            else {
-                //the current character in the encrypted string should match the
-                //character in the encryption key mapped from the character in the player key.
-                if(encryptedString[i] != encryptionKey[playerKey[encryptedString[i] - 65] - 65]) {
-                    decryptionStatus = false;
-                }
-                printf("%c", playerKey[toupper(encryptedString[i])-65]);
-            }
-        }
-        else {
-            printf("%c", encryptedString[i]);
-        }
-    }
-    printf("\n");
-    return decryptionStatus;
 }
 
 /**
@@ -276,6 +253,37 @@ char *acceptInput() {
 }
 
 /**
+ * Prints the game world to the screen.
+ */
+bool displayWorld() {
+    bool decryptionStatus = true;
+    printf("%s\n", puzzle);
+    printf("Encrypted: %s\n", encryptedString);
+    printf("Decrypted: ");
+    for(int i = 0; i < strlen(encryptedString); i++) {
+        if(isalpha(encryptedString[i])) {
+            if(playerKey[toupper(encryptedString[i])-65] == '\0') {
+                decryptionStatus = false;
+                printf("_");
+            }
+            else {
+                //the current character in the encrypted string should match the
+                //character in the encryption key mapped from the character in the player key.
+                if(encryptedString[i] != encryptionKey[playerKey[encryptedString[i] - 65] - 65]) {
+                    decryptionStatus = false;
+                }
+                printf("%c", playerKey[toupper(encryptedString[i])-65]);
+            }
+        }
+        else {
+            printf("%c", encryptedString[i]);
+        }
+    }
+    printf("\n");
+    return decryptionStatus;
+}
+
+/**
  * Controls the flow of the game until the user quits.
  */
 void gameLoop() {
@@ -291,15 +299,19 @@ void gameLoop() {
  */
 void tearDown() {
     free(encryptedString);
-    freeQuotes();
     printf("all done.\n");
 }
 
 int main(int argc, char** argv) {
     srand(time(NULL));
-
-    initialization();
-    gameLoop();
-    tearDown();
+    char buffer[3];
+    do {
+        initialization();
+        gameLoop();
+        tearDown();
+        printf("\nNew Game?(y/n): ");
+        fgets(buffer, sizeof(buffer), stdin);
+    }while(buffer[0] == 'y');
+    freeQuotes();
     return 0;
 }
