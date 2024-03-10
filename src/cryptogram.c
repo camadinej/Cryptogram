@@ -62,7 +62,7 @@ void shuffle(char *orderedString) {
 /**
  * @return a pointer to a new quote.
  */
-struct quote *quoteAlloc(){
+struct quote *quoteAlloc() {
     struct quote *newQuote = (struct quote*) malloc(sizeof(struct quote));
     newQuote->body = NULL;
     newQuote->author = NULL;
@@ -179,7 +179,8 @@ void freeQuotes() {
 }
 
 /**
- * @return the puzzle
+ * @return a random puzzle from the list of quotes.
+ * Creates the list of quotes if it does not exist already.
  */
 char *getPuzzle() {
     if(listSize == 0) {
@@ -220,7 +221,7 @@ void initialization() {
 }
 
 /**
- * Tests for a change in the games state based on user input.
+ * Tests for a change in the game's state based on user input.
  *
  * @param input - user input
  * @return true if the input is 'quit' or NULL
@@ -233,9 +234,9 @@ bool updateState(char *input) {
 }
 
 /**
- * Accepts a character string from the user.
+ * Accepts a game move from the user.
  *
- * @return the character string
+ * @return the user input buffer.
  */
 char *acceptInput() {
     printf("\nEnter a letter and its replacement, or quit to end program: ");
@@ -257,7 +258,6 @@ char *acceptInput() {
  */
 bool displayWorld() {
     bool decryptionStatus = true;
-    printf("%s\n", puzzle);
     printf("Encrypted: %s\n", encryptedString);
     printf("Decrypted: ");
     for(int i = 0; i < strlen(encryptedString); i++) {
@@ -267,8 +267,6 @@ bool displayWorld() {
                 printf("_");
             }
             else {
-                //the current character in the encrypted string should match the
-                //character in the encryption key mapped from the character in the player key.
                 if(encryptedString[i] != encryptionKey[playerKey[encryptedString[i] - 65] - 65]) {
                     decryptionStatus = false;
                 }
@@ -280,7 +278,6 @@ bool displayWorld() {
         }
     }
     printf("\n");
-    decryptionStatus ? printf("Decryption status: Complete!") : printf("Decryption status: incomplete...");
     return decryptionStatus;
 }
 
