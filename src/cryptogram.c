@@ -60,7 +60,7 @@ void shuffle(char *orderedString) {
 }
 
 /**
- * @return a pointer to a new quote.
+ * @return a pointer to a newly allocated quote.
  */
 struct quote *quoteAlloc() {
     struct quote *newQuote = (struct quote*) malloc(sizeof(struct quote));
@@ -179,8 +179,9 @@ void freeQuotes() {
 }
 
 /**
- * @return a random puzzle from the list of quotes.
  * Creates the list of quotes if it does not exist already.
+ *
+ * @return a random puzzle from the list of quotes.
  */
 char *getPuzzle() {
     if(listSize == 0) {
@@ -254,7 +255,7 @@ char *acceptInput() {
 }
 
 /**
- * Prints the game world to the screen.
+ * Prints the game world to the screen, and tracks the decryption progress.
  */
 bool displayWorld() {
     bool decryptionStatus = true;
