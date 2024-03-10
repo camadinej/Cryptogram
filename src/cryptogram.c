@@ -280,6 +280,7 @@ bool displayWorld() {
         }
     }
     printf("\n");
+    decryptionStatus ? printf("Decryption status: Complete!") : printf("Decryption status: incomplete...");
     return decryptionStatus;
 }
 
