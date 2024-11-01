@@ -1,3 +1,5 @@
-Command line based word jumble!
+A simple command line based word jumble.
 
-Simply compile and have fun guessing an impossibly vague quote!
+Build Info:
+
+Built using latest GCC version. Just simply run from the command line to play. 
